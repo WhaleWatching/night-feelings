@@ -4,19 +4,34 @@
 <head>
   <title>Night Feelings - ifyoucrashed.today</title>
   <style>
+  article canvas {
+    display: block;
+    margin: 0 auto;
+  }
+  article {
+    margin-top: 80px;
+  }
   body {
-    margin: 0;
-    overflow: hidden;
+    background-color: #222;
+    font-family: serif;
+    font-size: 16px;
+  }
+  footer {
+    color: #aaa;
+    margin-top: 20px;
+    text-align: center;
   }
   </style>
 </head>
 <body>
 <article class="stage"></article>
-<script src="lib/three.js"></script>
+<footer>Night feelings</footer>
+<script src="lib/three.min.js"></script>
 <script src="lib/Mirror.js"></script>
 <script src="lib/Detector.js"></script>
 <script src="lib/OrbitControls.js"></script>
 <script src="lib/WaterShader.js"></script>
+<script src="lib/SkyShader.js"></script>
 <script src="lib/stats.min.js"></script>
 <script src="night-feelings.js"></script>
 </body>

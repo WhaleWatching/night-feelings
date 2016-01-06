@@ -12,11 +12,17 @@
     // Lights
     ambient_light, sun_light,
     // Waters
-    water, water_normals, mirror_mesh;
+    water, water_normals, mirror_mesh,
+    // Sky
+    sky, sun_sphere;
+
+  var
+    scene_width = 1120,
+    scene_height = 630;
 
   var scene_params = {
-    width: 4000,
-    height: 4000,
+    width: 400,
+    height: 200,
     widthSegments: 250,
     heightSegments: 250,
     depth: 1500,
@@ -29,22 +35,23 @@
 
   function init () {
     renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setSize(scene_width, scene_height);
     renderer.setPixelRatio(window.devicePixelRatio);
     document.querySelector('article.stage').appendChild(renderer.domElement);
 
     scene = new THREE.Scene();
 
     camera =
-      new THREE.PerspectiveCamera(90, window.innerWidth/window.innerHeight, 0.5, 3000000);
-    camera.position.set(2000, 750, 2000);
+      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.5, 3000000);
+    camera.position.set(0, 1600, 1500);
+    camera.lookAt(new THREE.Vector3(0,0,0));
 
     // Lights
 
     ambient_light = new THREE.AmbientLight(0x444444);
     scene.add(ambient_light);
-    sun_light = new THREE.DirectionalLight(0xffffbb, 1);
-    sun_light.position.set(-1, 1, -1);
+    sun_light = new THREE.DirectionalLight(0xffffff, 0.1);
+    sun_light.position.set(-0.98, 1, -1);
     scene.add(sun_light);
 
     // Waters
@@ -72,6 +79,85 @@
       scene.add(mirror_mesh);
     });
 
+
+    var helper = new THREE.GridHelper( 1200, 1200 );
+    helper.position.y = 20
+    helper.color1.setHex( 0xffffff );
+    helper.color2.setHex( 0xffffff );
+    scene.add( helper );
+
+    // addSkybox();
+    addSkyShader();
+  }
+
+  function addSkyShader() {
+    // Sky mesh
+    sky = new THREE.Sky();
+    scene.add(sky.mesh);
+
+    // Sun helper
+    sun_sphere = new THREE.Mesh(
+        new THREE.SphereBufferGeometry(20000, 16, 8),
+        new THREE.MeshBasicMaterial({color: 0xffffff})
+      );
+    sun_sphere.position.y = - 700000;
+    sun_sphere.visible = false;
+    scene.add(sun_sphere);
+
+    // GUI
+    var effectController  = {
+      turbidity: 10,
+      reileigh: 2,
+      mieCoefficient: 0.005,
+      mieDirectionalG: 0.8,
+      luminance: 1,
+      inclination: 0.3, // elevation / inclination
+      azimuth: 0.13, // Facing front,
+      sun: ! true
+    };
+
+    var distance = 400000;
+
+    function setSkyState () {
+      var uniforms = sky.uniforms;
+      uniforms.turbidity.value = effectController.turbidity;
+      uniforms.reileigh.value = effectController.reileigh;
+      uniforms.luminance.value = effectController.luminance;
+      uniforms.mieCoefficient.value = effectController.mieCoefficient;
+      uniforms.mieDirectionalG.value = effectController.mieDirectionalG;
+
+      var theta = Math.PI * ( effectController.inclination - 0.5 );
+      var phi = 2 * Math.PI * ( effectController.azimuth - 0.5 );
+
+      sun_sphere.position.x = distance * Math.cos( phi );
+      sun_sphere.position.y = distance * Math.sin( phi ) * Math.sin( theta );
+      sun_sphere.position.z = distance * Math.sin( phi ) * Math.cos( theta );
+
+      sun_sphere.visible = effectController.sun;
+
+      sky.uniforms.sunPosition.value.copy( sun_sphere.position );
+    }
+
+    setSkyState();
+
+  }
+
+
+  function update () {
+    window.requestAnimationFrame(update);
+    render();
+  }
+
+  function render () {
+    if(water) {
+      water.material.uniforms.time.value += 1.0 / 60.0;
+      water.render();
+    }
+    renderer.render( scene, camera );
+  }
+
+
+  function addSkybox () {
     // Sky box
 
     var cube_map = new THREE.CubeTexture([]);
@@ -120,19 +206,6 @@
       );
 
     scene.add(sky_box);
-  }
-
-  function update () {
-    window.requestAnimationFrame(update);
-    render();
-  }
-
-  function render () {
-    if(water) {
-      water.material.uniforms.time.value += 1.0 / 60.0;
-      water.render();
-    }
-    renderer.render( scene, camera );
   }
 
 })(THREE, Detector, window, document);
