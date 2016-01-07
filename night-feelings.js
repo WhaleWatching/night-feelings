@@ -44,7 +44,7 @@
     scene = new THREE.Scene();
 
     camera =
-      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.5, 1000000);
+      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.5, 40000);
     camera.position.set(0, 1600, 1500);
     // camera.position.set(400, 600, 800);
     camera.lookAt(new THREE.Vector3(0,0,0));
@@ -58,8 +58,8 @@
     scene.add(sun_light);
 
     hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
-    hemiLight.color.setHex( 0xdddddd );
-    hemiLight.groundColor.setHex( 0x000000 );
+    hemiLight.color.setHex( 0xffffff );
+    hemiLight.groundColor.setHex( 0x88ccbb );
     scene.add( hemiLight );
 
     // Waters
@@ -92,7 +92,7 @@
     helper.position.y = 20
     helper.color1.setHex( 0xffffff );
     helper.color2.setHex( 0xffffff );
-    // scene.add( helper );
+    scene.add( helper );
 
     // addSkybox();
     addSkyShader();
@@ -100,7 +100,7 @@
 
     // TextGeometry
 
-    var text_material = new THREE.MeshPhongMaterial({
+    var text_phong_material = new THREE.MeshPhongMaterial({
       color: 0xffffff
     });
     function getTextMeshOf (str) {
@@ -113,7 +113,7 @@
         style: 'normal',
         bevelEnabled: false
       });
-      return new THREE.Mesh(text_geometry, text_material);
+      return new THREE.Mesh(text_geometry, text_phong_material);
     }
 
     function getTextMeshGroupOf (strings) {
@@ -140,6 +140,29 @@
 
     scene.add(words_objects.following);
 
+
+    // Box meshes
+    var box_material = new THREE.MeshLambertMaterial({
+      color: 0x878787,
+      emissive: 0x000000
+    });
+    var box_size = 100;
+    var box_area = {
+      left: -200,
+      right: 200,
+      top: -200,
+      bottom: 50
+    }
+    for (var i = 1000; i >= 0; i--) {
+      var geo = new THREE.BoxGeometry(box_size, box_size, box_size);
+      var mesh = new THREE.Mesh(geo, box_material);
+      scene.add(mesh);
+      mesh.position.set(randomBetween(box_area.left, box_area.right)*box_size, randomBetween(1, 10)*box_size, randomBetween(box_area.top, box_area.bottom)*box_size);
+    };
+
+    var light = new THREE.PointLight(0xffffff, 1, 5000);
+    light.position.set(0, 800, 0);
+    scene.add(light);
   }
 
   function addSkyShader() {
@@ -163,7 +186,7 @@
       mieCoefficient: 0.005,
       mieDirectionalG: 0.8,
       luminance: 1,
-      inclination: 0.48, // elevation / inclination
+      inclination: 0.4, // elevation / inclination
       azimuth: 0.13, // Facing front,
       sun: ! true
     };
@@ -209,6 +232,13 @@
 
   function directorUpdate() {
     
+  }
+
+
+  // help func
+
+  function randomBetween (begin, end) {
+    return Math.floor(begin + Math.random() * (end - begin));
   }
 
 })(THREE, Detector, window, document);
