@@ -44,7 +44,7 @@
     scene = new THREE.Scene();
 
     camera =
-      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.5, 300000);
+      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.1, 300000);
     camera.position.set(0, 1600, 1500);
     // camera.position.set(400, 600, 800);
     camera.lookAt(new THREE.Vector3(0,0,0));
@@ -59,7 +59,7 @@
 
     hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
     hemiLight.color.setHex( 0xffffff );
-    hemiLight.groundColor.setHex( 0x88ccbb );
+    hemiLight.groundColor.setHex( 0x000000 );
     scene.add( hemiLight );
 
     // Waters
@@ -92,7 +92,7 @@
     helper.position.y = 20
     helper.color1.setHex( 0xffffff );
     helper.color2.setHex( 0xffffff );
-    scene.add( helper );
+    // scene.add( helper );
 
     // addSkybox();
     addSkyShader();
@@ -126,26 +126,28 @@
       };
 
       group.position.set(0, 1520, 1200);
-      group.rotation.x = - Math.PI * 0.26;
+      group.rotation.x = - Math.PI * 0.23;
       return group;
     }
 
     words_objects = {
-      afternoon: getTextMeshGroupOf(['you shall come back', 'tonight']),
-      sunset: getTextMeshGroupOf(['night', 'sun is moving down', 'birds are dying']),
-      dry: getTextMeshGroupOf(['dry', 'don\'t stop trying', 'lines here', 'implies way']),
-      wayout: getTextMeshGroupOf(['a way out', 'are you following?']),
+      afternoon: getTextMeshGroupOf(['you should come back', 'tonight']),
+      sunset: getTextMeshGroupOf(['night', 'sun is moving down']),
+      empty: getTextMeshGroupOf(['empty, but with noise', 'hey', 'look!', 'path there']),
+      wayout: getTextMeshGroupOf(['got the way out', 'are you following?']),
       following: getTextMeshGroupOf(['are you following?'])
     }
 
-    scene.add(words_objects.following);
+    scene.add(words_objects.wayout);
 
 
     // Box meshes
     var box_material = new THREE.MeshLambertMaterial({
-      color: 0x878787,
-      emissive: 0x000000
+      color: 0x666666,
+      emissive: 0x000913
     });
+    box_material.opacity = 0.6;
+    box_material.transparent = true;
     var box_size = 100;
     var box_area = {
       left: -200,
@@ -153,15 +155,51 @@
       top: -200,
       bottom: 50
     }
-    for (var i = 1000; i >= 0; i--) {
+    function generateBoxAndSetAt (position) {
       var geo = new THREE.BoxGeometry(box_size, box_size, box_size);
       var mesh = new THREE.Mesh(geo, box_material);
       scene.add(mesh);
-      mesh.position.set(randomBetween(box_area.left, box_area.right)*box_size, randomBetween(1, 10)*box_size, randomBetween(box_area.top, box_area.bottom)*box_size);
+      mesh.position.set(position.x * box_size, (position.y + 1) * box_size, position.z * box_size);
+      return mesh;
+    }
+    // for (var i = 1000; i >= 0; i--) {
+    //   generateBoxAndSetAt(new THREE.Vector3(randomBetween(box_area.left, box_area.right), randomBetween(1, 10), randomBetween(box_area.top, box_area.bottom)));
+    // };
+
+    var box_maze = [];
+    for (var i = 0; i <= 1000; i++) {
+
+      // First one
+      if (i == 0) {
+        box_maze.push({
+          mesh: null,
+          position: new THREE.Vector3(0, 0, 0)
+        });
+        continue;
+      }
+
+      var next_position = null;
+      var pre_position = box_maze[i - 1].position;
+
+      if (randomBetween(0, 100) > 95) {
+        pre_position = new THREE.Vector3(randomBetween(-100, 100), randomBetween(0, 5), randomBetween(box_area.top, box_area.bottom));
+      }
+      
+      next_position = new THREE.Vector3(pre_position.x + randomBetween(-1, 2), pre_position.y + randomBetween(-1, 2), pre_position.z + randomBetween(-1, 2));
+
+      if (next_position.y > 5) { next_position.y = 5}
+      if (next_position.y < 0) { next_position.y = 0}
+      box_maze.push({
+        mesh: null,
+        position: next_position
+      });
+    };
+    for (var i = box_maze.length - 1; i >= 0; i--) {
+      box_maze[i].mesh = generateBoxAndSetAt(box_maze[i].position);
     };
 
     var light = new THREE.PointLight(0xffffff, 1, 5000);
-    light.position.set(0, 800, 0);
+    light.position.set(0, 1000, 0);
     scene.add(light);
   }
 
@@ -186,7 +224,7 @@
       mieCoefficient: 0.005,
       mieDirectionalG: 0.8,
       luminance: 1,
-      inclination: 0.4, // elevation / inclination
+      inclination: 0.8, // elevation / inclination
       azimuth: 0.13, // Facing front,
       sun: ! true
     };
