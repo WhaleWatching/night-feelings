@@ -44,7 +44,7 @@
     scene = new THREE.Scene();
 
     camera =
-      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.5, 40000);
+      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.5, 300000);
     camera.position.set(0, 1600, 1500);
     // camera.position.set(400, 600, 800);
     camera.lookAt(new THREE.Vector3(0,0,0));
