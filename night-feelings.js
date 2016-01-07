@@ -8,13 +8,15 @@
   }
 
   var
-    renderer, camera, scene,
+    renderer, camera, scene, composer,
     // Lights
-    ambient_light, sun_light,
+    ambient_light, sun_light, hemiLight,
     // Waters
     water, water_normals, mirror_mesh,
     // Sky
-    sky, sun_sphere;
+    sky, sun_sphere,
+    // Words
+    words_objects;
 
   var
     scene_width = 1120,
@@ -34,7 +36,7 @@
   update();
 
   function init () {
-    renderer = new THREE.WebGLRenderer();
+    renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(scene_width, scene_height);
     renderer.setPixelRatio(window.devicePixelRatio);
     document.querySelector('article.stage').appendChild(renderer.domElement);
@@ -42,8 +44,9 @@
     scene = new THREE.Scene();
 
     camera =
-      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.5, 3000000);
+      new THREE.PerspectiveCamera(90, scene_width/scene_height, 0.5, 1000000);
     camera.position.set(0, 1600, 1500);
+    // camera.position.set(400, 600, 800);
     camera.lookAt(new THREE.Vector3(0,0,0));
 
     // Lights
@@ -53,6 +56,11 @@
     sun_light = new THREE.DirectionalLight(0xffffff, 0.1);
     sun_light.position.set(-0.98, 1, -1);
     scene.add(sun_light);
+
+    hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
+    hemiLight.color.setHex( 0xdddddd );
+    hemiLight.groundColor.setHex( 0x000000 );
+    scene.add( hemiLight );
 
     // Waters
 
@@ -79,15 +87,59 @@
       scene.add(mirror_mesh);
     });
 
-
+    // Helper
     var helper = new THREE.GridHelper( 1200, 1200 );
     helper.position.y = 20
     helper.color1.setHex( 0xffffff );
     helper.color2.setHex( 0xffffff );
-    scene.add( helper );
+    // scene.add( helper );
 
     // addSkybox();
     addSkyShader();
+
+
+    // TextGeometry
+
+    var text_material = new THREE.MeshPhongMaterial({
+      color: 0xffffff
+    });
+    function getTextMeshOf (str) {
+      var text_geometry = new THREE.TextGeometry(str, {
+        size: 18,
+        height: 1,
+        curveSegments: 12,
+        font: 'helvetiker',
+        weight: 'normal',
+        style: 'normal',
+        bevelEnabled: false
+      });
+      return new THREE.Mesh(text_geometry, text_material);
+    }
+
+    function getTextMeshGroupOf (strings) {
+      var group = new THREE.Object3D();
+      for (var i = strings.length - 1; i >= 0; i--) {
+        var str = strings[i];
+        var newText = getTextMeshOf(str);
+        newText.position.y = -40 * i;
+        group.add(newText);
+      };
+
+      group.position.set(0, 1520, 1200);
+      group.rotation.x = - Math.PI * 0.26;
+      return group;
+    }
+
+    words_objects = {
+      afternoon: getTextMeshGroupOf(['you shall come back', 'tonight']),
+      sunset: getTextMeshGroupOf(['night', 'sun is moving down', 'birds are dying']),
+      dry: getTextMeshGroupOf(['dry', 'don\'t stop trying', 'lines here', 'implies way']),
+      wayout: getTextMeshGroupOf(['a way out', 'are you following?']),
+      following: getTextMeshGroupOf(['are you following?'])
+    }
+
+    scene.add(words_objects.following);
+
   }
 
   function addSkyShader() {
@@ -104,14 +156,14 @@
     sun_sphere.visible = false;
     scene.add(sun_sphere);
 
-    // GUI
+    // params
     var effectController  = {
       turbidity: 10,
       reileigh: 2,
       mieCoefficient: 0.005,
       mieDirectionalG: 0.8,
       luminance: 1,
-      inclination: 0.3, // elevation / inclination
+      inclination: 0.48, // elevation / inclination
       azimuth: 0.13, // Facing front,
       sun: ! true
     };
@@ -142,7 +194,6 @@
 
   }
 
-
   function update () {
     window.requestAnimationFrame(update);
     render();
@@ -156,56 +207,8 @@
     renderer.render( scene, camera );
   }
 
-
-  function addSkybox () {
-    // Sky box
-
-    var cube_map = new THREE.CubeTexture([]);
-    cube_map.format = THREE.RGBFormat;
-
-    var loader = new THREE.TextureLoader();
-    loader.load('textures/skyboxsun25degtest.png', function (texture) {
-      console.dir(texture.image);
-
-      function getSide (x, y) {
-        var size = 1024;
-
-        var canvas = document.createElement('canvas');
-        canvas.width = size;
-        canvas.height = size;
-
-        var context = canvas.getContext('2d');
-        context.drawImage(texture.image, - x * size, - y * size);
-
-        return canvas;
-      }
-
-      cube_map.images[ 0 ] = getSide( 2, 1 ); // px
-      cube_map.images[ 1 ] = getSide( 0, 1 ); // nx
-      cube_map.images[ 2 ] = getSide( 1, 0 ); // py
-      cube_map.images[ 3 ] = getSide( 1, 2 ); // ny
-      cube_map.images[ 4 ] = getSide( 1, 1 ); // pz
-      cube_map.images[ 5 ] = getSide( 3, 1 ); // nz
-      cube_map.needsUpdate = true;
-    });
-
-    var cube_shader = THREE.ShaderLib['cube'];
-    cube_shader.uniforms['tCube'].value = cube_map;
-
-    var skyBoxMaterial = new THREE.ShaderMaterial({
-      fragmentShader: cube_shader.fragmentShader,
-      vertexShader: cube_shader.vertexShader,
-      uniforms: cube_shader.uniforms,
-      depthWrite: true,
-      side: THREE.BackSide
-    });
-
-    var sky_box = new THREE.Mesh(
-        new THREE.BoxGeometry(1000000, 1000000, 1000000),
-        skyBoxMaterial
-      );
-
-    scene.add(sky_box);
+  function directorUpdate() {
+    
   }
 
 })(THREE, Detector, window, document);

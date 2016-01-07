@@ -1,16 +1,22 @@
 
-Night, Ad.
-Sun is moving down
-Birds are dying
+-- afternoon
+you shall comeback
+tonight
 
-No wind crossing your mind
-No wind
+-- sunset
+night
+sun is moving down
+birds are dying
 
-Dry, Ad.
-Don't stop walking
-Line here, implies way
+-- dry
+dry
+don't stop walking
+line here
+implies way
 
-A way out, Ad.
-Are you following?
+-- wayout
+a way out
+are you following?
 
-Are you following?
+-- following
+are you following?
