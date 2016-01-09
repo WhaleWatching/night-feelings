@@ -27,7 +27,7 @@
     height: 200
   };
 
-  var box_max_count = 4000;
+  var box_max_count = 7000;
 
 
   // Box funcs
@@ -253,8 +253,10 @@
     // Begin loop
     update();
 
-    window.setInterval(directorUpdate, 200);
-    directorUpdate();
+    window.setInterval(function () {
+      mark_update = true;
+    }, 2000);
+    mark_update = true;
   }
 
   var current_poem;
@@ -326,7 +328,12 @@
     setSkyState();
   }
 
+  var mark_update = false;
   function update () {
+    if (mark_update) {
+      directorUpdate();
+      mark_update = false;
+    }
     window.requestAnimationFrame(update);
     render();
   }
@@ -353,10 +360,10 @@
     }
   }
 
-  var time = new Date();
+  // var time = new Date('7 Jan 2015 18:00:00');
   function directorUpdate() {
-    // var time = new Date();
-    time = new Date(time.getTime() + 200000);
+    var time = new Date();
+    // time = new Date(time.getTime() + 200000);
     var today_seed = Math.floor((time.getTime() - 24 * 3600000) / (1000 * 3600 * 24));
     var today_process = (time.getTime() % (1000 * 3600 * 24)) - (10 * 1000 * 3600);
     if (!box_random_gen || box_random_gen.original_seed !== today_seed) {
@@ -368,6 +375,7 @@
       if (box_maze.length != 0) {
         box_maze = box_maze.filter(function (value) {
           maze_container.remove(value.mesh);
+          delete value.mesh;
           return false;
         });
       }
@@ -380,7 +388,6 @@
         // console.log('less: ' + today_process);
         adjustSkyTo(0.8);
         hemiLight.intensity = 0.3;
-        sun_light.intensity = 0.3;
       } else {
         hemiLight.intensity = 0.6;
         sun_light.intensity = 0.4;
@@ -406,8 +413,14 @@
         maze_container.position.y = 0;
       }
 
-      hemiLight.intensity = 0.1;
-      sun_light.intensity = 0.1;
+
+      hemiLight.intensity = 0.05 + (0.55 - 0.55 * (today_process / (12 * 3600000)));
+      console.log((0.5 - (today_process / (12 * 3600000))));
+      if (today_process < 25 * 60000) {
+        sun_light.intensity = 0.4;
+      } else {
+        sun_light.intensity = 0;
+      }
 
       // Poem
       if (today_process < 25 * 60000) {
